@@ -7,8 +7,74 @@
         <h2>Purchase Completed</h2>
         <hr />
         <p>Congratulations, purchase completed. Order number is: <b>#{{ template_data.order_id }}</b></p>
+        <div class="mt-4">
+          <a href="{% url 'home.index' %}" class="btn btn-primary">Continue Shopping</a>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
+<!-- Simple Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedbackModalLabel">Checkout Feedback</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="feedbackForm">
+          <div class="mb-3">
+            <label for="feedbackName" class="form-label">Name (Optional)</label>
+            <input type="text" class="form-control" id="feedbackName" name="name" placeholder="Your name (optional)">
+          </div>
+          <div class="mb-3">
+            <label for="feedbackThoughts" class="form-label">Your Thoughts <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="feedbackThoughts" name="thoughts" rows="4" placeholder="Please share your thoughts about the checkout process..." required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitFeedback">Submit</button>
+      </div>
+    </div>
+  </div>
+ </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+    modal.show();
+  }, 800);
+
+  document.getElementById('submitFeedback').addEventListener('click', function() {
+    var name = document.getElementById('feedbackName').value.trim();
+    var thoughts = document.getElementById('feedbackThoughts').value.trim();
+    if (!thoughts) { alert('Please enter your thoughts.'); return; }
+
+    fetch('{% url "cart.submit_feedback" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ name: name, thoughts: thoughts })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Thanks for the feedback! You can view it on the feedback page.');
+        var modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+        modal.hide();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    })
+    .catch(() => alert('An error occurred while submitting feedback.'));
+  });
+});
+</script>
 {% endblock content %}
